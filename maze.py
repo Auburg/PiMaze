@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import time
 
-filename = "./maze_files/test2x2.txt"
+filename = "./maze_files/test1x1.txt"
 green=(0,255,0)
 orange=(255, 165, 0)
 sense=SenseHat()
@@ -12,11 +12,10 @@ maxCol=8
 maxRow=8
     
 def draw_maze(maze,view_loc):
-    
-    for row in range(view_loc['row'],maxRow):
-        for col in range(view_loc['col'],maxCol):
+    for col in range(view_loc['col'],maxCol):
+        for row in range(view_loc['row'],maxRow):        
             if maze[row,col] == 1:
-                sense.set_pixel(row,col, green)
+                sense.set_pixel(col,row, green)
                 
 def get_initial_marble_pos(maze):
     location={}
@@ -33,7 +32,7 @@ def get_initial_marble_pos(maze):
             
     return (location)
                 
-def update_marble_position(pitch,roll,x,y):    
+def update_marble_position(maze,pitch,roll,x,y):    
     new_x=x
     new_y=y
     tolerance = 10
@@ -53,8 +52,7 @@ def update_marble_position(pitch,roll,x,y):
         new_y-=1   
     
     if 0 <= new_x < maxCol and 0 <= new_y < maxRow:
-        maze_pixel = sense.get_pixel(new_x,new_y)        
-        if maze_pixel[1] == 0:            
+        if maze[new_y,new_x] == 0:            
             x=new_x
             y=new_y
         
@@ -79,7 +77,7 @@ def run(maze):
         o = sense.get_orientation()  
         sense.clear()
         draw_maze(maze,view_area)
-        marble_location = update_marble_position(o["pitch"],o["roll"],marble_location['x'],marble_location['y'])
+        marble_location = update_marble_position(maze,o["pitch"],o["roll"],marble_location['x'],marble_location['y'])
         
         time.sleep(0.1)
 
@@ -88,5 +86,8 @@ if not os.path.isfile(filename):
     sys.exit()
 else:    
     maze = np.loadtxt(filename, dtype=int , skiprows = 1)
+    
+    #print(maze)
+    
     run(maze)
   
