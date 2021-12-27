@@ -3,9 +3,8 @@ import os.path
 import sys
 import numpy as np
 import time
-import math
 
-filename = "./maze_files/test1x2.txt"
+filename = "./maze_files/test2x2.txt"
 green=(0,255,0)
 empty=(0,0,0)
 orange=(255, 165, 0)
@@ -13,31 +12,16 @@ sense=SenseHat()
 maxCol=8
 maxRow=8
     
-def draw_maze(maze,view_region,marble_location,size):
+def draw_maze(maze,view_region,marble_location):    
     
-    #colStart = view_region['col']
-    #rowStart = view_region['row']
-    #colEnd = colStart+maxCol #if size[1]-colStart > maxCol else size[1]-colStart
-    #rowEnd = rowStart+maxRow #if size[0]-rowStart > maxRow else size[0]-rowStart
-    #pixels = [0] * (maxCol*maxRow)
+    colStart = view_region['col_start']
+    rowStart = view_region['row_start']
+    newarr = (maze[rowStart:rowStart+maxRow:, colStart:colStart+maxCol]).flatten()
     
-    #print('marble_location x is {0} colStart is {1} col end is {2} max col is {3}'.format(marble_location['x'],colStart,colEnd,size[1]))
-    #pixelIndex = 0;
-    
-    #for row in range(rowStart,rowEnd):
-    #    for col in range(colStart,colEnd): 
-    #        if maze[row,col] == 1:
-    #           pixels[pixelIndex]=green
-    #        else:
-    #           pixels[pixelIndex]=empty
-    #    pixelIndex+=1
-        
-    newarr = (maze[0:8:, 0:8]).flatten()
-
     asign = lambda t: green if t==1 else empty
-    newarr= list(map(asign, newarr))
+    pixels = list(map(asign, newarr))
     
-    sense.set_pixels(newarr)
+    sense.set_pixels(pixels)
     sense.set_pixel(marble_location['x']%maxCol,marble_location['y']%maxRow, orange)
                 
 def get_initial_marble_pos(maze):
@@ -61,10 +45,11 @@ def update_marble_position(maze,pitch,roll,x,y,view_col,view_row):
     new_view_col=view_col
     new_view_row=view_row
     #print('orig pitch is {0} orig roll is {1} pitch is {2} roll is {3} x is {4} y is {5}'.format(rest_pitch,rest_roll,pitch,roll,x,y))
-    
+    print('x is {0} y is {1}'.format(x,y))
     new_locations={}
     marble_location = {}
     view_location = {}
+    size = np.shape(maze) 
     
     if 11 < pitch < 179:
         new_x-=1            
@@ -76,42 +61,39 @@ def update_marble_position(maze,pitch,roll,x,y,view_col,view_row):
     elif 359 > roll > 181:
         new_y-=1
         
-    size = np.shape(maze) 
-    
     if 0 <= new_x < size[1] and 0 <= new_y < size[0]:
-        if maze[new_y,new_x] == 0:            
+        if maze[new_y,new_x] == 0:
+            if new_x>x and new_view_col+ maxCol < size[1]:
+                new_view_col+=1
+    
+            if new_x<x and new_view_col > 0:
+                new_view_col-=1
+        
+            if new_y>y and new_view_row+ maxRow < size[0]:
+                new_view_row+=1
+    
+            if new_y<y and new_view_row > 0:
+                new_view_row-=1
             x=new_x
             y=new_y
-        
-    
-    
-    if new_x>x:
-        new_view_col+=1
-    
-    if new_x<x:
-        new_view_col-=1
-        
-    if new_y>y:
-        new_view_row+=1
-    
-    if new_y<y:
-        new_view_row-=1
     
     marble_location['x']=x
     marble_location['y']=y
-    view_location['row']=new_view_row
-    view_location['col']=new_view_col
+    view_location['row_start']=new_view_row
+    view_location['col_start']=new_view_col
     
     new_locations['marble']=marble_location
     new_locations['view']=view_location
+    
+    #print('new view col {0} new view row {1}'.format(view_location['col_start'],view_location['row_start']))
     
     return new_locations
     
 def run(maze):
     size = np.shape(maze)
     view_region = {}
-    view_region['col']=0
-    view_region['row']=0
+    view_region['col_start']=0
+    view_region['row_start']=0
     
     marble_location = get_initial_marble_pos(maze)    
     if marble_location['x'] == -1 and marble_location['y'] == -1:
@@ -122,10 +104,10 @@ def run(maze):
         o = sense.get_orientation()  
         sense.clear()
         
-        updated_locations = update_marble_position(maze,o["pitch"],o["roll"],marble_location['x'],marble_location['y'],view_region['col'],view_region['row'])
+        updated_locations = update_marble_position(maze,o["pitch"],o["roll"],marble_location['x'],marble_location['y'],view_region['col_start'],view_region['row_start'])
         marble_location = updated_locations['marble']
-        
-        draw_maze(maze,updated_locations['view'],marble_location,size)
+        view_region = updated_locations['view']
+        draw_maze(maze,view_region,marble_location)
         time.sleep(0.1)
 
 if not os.path.isfile(filename):
