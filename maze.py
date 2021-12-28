@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import time
 
-filename = "./maze_files/test2x2.txt"
+filename = "./maze_files/test1x2.txt"
 green=(0,255,0)
 empty=(0,0,0)
 orange=(255, 165, 0)
@@ -22,7 +22,7 @@ def draw_maze(maze,view_region,marble_location):
     pixels = list(map(asign, newarr))
     
     sense.set_pixels(pixels)
-    sense.set_pixel(marble_location['x']%maxCol,marble_location['y']%maxRow, orange)
+    sense.set_pixel(marble_location['x']-colStart,marble_location['y']-rowStart, orange)
                 
 def get_initial_marble_pos(maze):
     location={}
