@@ -12,15 +12,6 @@ sense=SenseHat() #sense hat library
 maxCol=8 # maximum number of screen pixel columns
 maxRow=8 # maximum number of screen pixel rows
 
-# this is the start of the program - check that the level file is valid. If not then print an error and exit 
-if not os.path.isfile(filename):
-    print('% s does not exist.' % filename)
-    sys.exit()
-else:    
-    # the file exists - attempt to load the file into a 2d numpy array of ints, skipping the file header and then pass the array to the run function
-    maze = np.loadtxt(filename, dtype=int , skiprows = 1)    
-    run(maze)
-
 # Function This is the main game loop which runs continuously
 # Params: maze - the 2d maze level      
 def run(maze):
@@ -161,4 +152,13 @@ def update_marble_position(maze,pitch,roll,marble_x,marble_y,view_col,view_row):
     new_locations['view']=view_location
     
     return new_locations
+
+# this is the start of the program - check that the level file is valid. If not then print an error and exit 
+if not os.path.isfile(filename):
+    print('% s does not exist.' % filename)
+    sys.exit()
+else:    
+    # the file exists - attempt to load the file into a 2d numpy array of ints, skipping the file header and then pass the array to the run function
+    maze = np.loadtxt(filename, dtype=int , skiprows = 1)    
+    run(maze)
 
